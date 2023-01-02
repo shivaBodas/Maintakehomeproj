@@ -1,0 +1,62 @@
+import java.time.Instant
+plugins {
+	id "org.springframework.boot" version "2.7.0"
+	id "io.spring.dependency-management" version "1.0.13.RELEASE"
+	id "com.google.cloud.tools.jib" version "2.7.1"
+	id "java"}
+
+group = "com.example"
+version = "0.0.2-SNAPSHOT"
+java {
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
+}
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "org.springframework.boot:spring-boot-starter"
+	implementation "org.springframework.boot:spring-boot-starter-actuator"
+	implementation "org.springframework.boot:spring-boot-starter-web"
+	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.14'
+	compileOnly 'org.projectlombok:lombok'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.1'
+	implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation "org.springframework.boot:spring-boot-starter-test"
+	testImplementation "org.mockito:mockito-junit-jupiter:4.11.0"
+}
+
+
+tasks.named("test") {
+	useJUnitPlatform()
+}
+
+jib {
+	var tag = "latest"
+	from {
+		image = "gcr.io/distroless/java:11"
+	}
+	to {
+		image = "registry.hub.docker.com/shivamontreal/${rootProject.name}:$version"
+		//Please Comment this if you want to build app locally
+		auth {
+			username = findProperty('DOCKERHUB_USERNAME')
+			password = findProperty('DOCKERHUB_PASSWORD')
+		}
+		tags = [tag,version]
+	}
+	container {
+		jvmFlags = ['-Xms512m','-Xdebug']
+		ports = ['8080']
+		creationTime = Instant.now().toString()
+		format = com.google.cloud.tools.jib.api.buildplan.ImageFormat.OCI
+	}
+}

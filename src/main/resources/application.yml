@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: "takehome"
+
+---
+logging:
+  level:
+    root: "WARN"
+
